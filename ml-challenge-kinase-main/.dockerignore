@@ -1,0 +1,7 @@
+tutorials/
+data/processed
+model/AttentiveFP_Aromaticity_pre_trained.pth
+figure/
+notebooks/
+*.bin
+*.sh

@@ -1,0 +1,13 @@
+# docker-compose.yml
+version: '3.3'    
+services:
+  postera_kinase_mlchallenge:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:80"
+    image: postera:latest
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    container_name: postera_kinase

@@ -1,63 +1,86 @@
 # Designing selective kinase inhibitors
+### PostEra
 
-PostEra
+# Usage
+#### via Docker
+* To run with docker and create running docker container, first run the following in working directory ```postera_ml_challenge/```:
+```
+docker-compose build
+```
+or directly to running the container as well
+```
+docker compose up
+* To use the application where the python entrypoint is already configured, you may run a basic training via the command:
+```
+docker run -dit --name main -it --rm postera:latest -d data/kinase_JAK_.8Train.csv train
+```
+* The application has the following mode of train/evaluate (single/cross) / infer, which you may make use of using 
+```
+docker run -dit --name main -it --rm postera:latest -d [path/to/input/data] [train/evaluate/]
+```
+    or override the default entry point to run within the terminal:
+```
+docker run -it --user matt --name postera --entrypoint /bin/bash postera:latest
+```
 
-## Before coding:
-- **Please code this model yourself in the machine learning framework of your choice. Please don't clone an existing ML-for-chemistry model implementation, although feel free to utilize libraries such as [PyTorch Geometric](https://pytorch-geometric.readthedocs.io) or [Deep Graph Library](https://www.dgl.ai) as scaffolds for your implementation.**
-- **Please return any folder structure & files in a zip file, although please do not include large files such as model weights.**
+To test the application with the container, we may run:
+```
+docker exec -it postera /bin/bash
+```
+To run application test for basic functionality test:
+```
+docker exec myubuntu bash -c "pytest test.py"
+```
+#### Application Notes
+* The detail functions of the application can be viewed with:
+```
+python main -h
+```
+which will display the pipeline
+```
+usage: main.py [-h] -d DATA_PATH [-m MODEL] [-bs BATCH_SIZE] [-nw NUM_WORKERS]
+               [--model_path MODEL_PATH]
+               {train,evaluate,infer} ...
 
-## Problem Statement:
+positional arguments:
+  {train,evaluate,infer}
+                        train or test mode
 
-The goal is to develop a model that can predict the pKi of a given compound against JAK1, JAK2, JAK3 and TYK2 kinases, which can then be used in identifying selective inhibitors. Selectivity in this scenario means a compound has a high pKi value for only one of the four kinases. For example, a selective compound would bind to JAK1 with a high pKi value, but with low pKi values to the other three kinases. See [problem context](#problem-context) for more detailed information.
-
-## What we're looking for
-
-### Must-Haves
-- **Exploratory Data Analysis**: Analyze the data `kinase_JAK.csv` and present to us your understanding of the data. Discuss any noteworthy aspects of the data and any assumptions you make.
-- **Data Processing**: Build a data processing pipeline and set up your model evaluation strategies based on this specific type of data. Carefully consider how you split the data and how that may impact your model evaluation.
-- **Model Development**: Implement an interesting deep learning model (e.g. transformer or graph neural net) that predicts pKi as a function of molecular structure for all four kinases. For text-based models, a tokenizer is provided in the notebook `kinase_challenge_data.ipynb`.
-- **Model Evaluation**: Evaluate your model using performance metrics and relating it back to the [problem](#problem-statement)
-- **Model Deployment**: Discuss how your model could be deployed as a service.
-- **Future Ideas**: Consider which directions would be most interesting to pursue if you had more time and/or resources.
-
-### Other Ideas
-Based on your skills and interest, you could extend beyond the [must haves](#must-haves) in these potential areas:
-- **Advanced Modeling**: Test additional ideas to create an even better model.
-- **Model Comparison**: Test multiple ideas head-to-head.
-- **Example Deployment**: Build out a prototype deployment solution.
-- **Extend any of the Must-Haves**: Go into more depth on any of the above sections.
-
-### Additional Notes
-- We want you to think about interesting deep learning approaches to the problem, but we are not necessarily looking for a state-of-the-art deep model, so no need to spend time chasing small performance improvements.
-- We want to see that you've thought through the problem and made reasonable assumptions justified by the data, so explain your reasoning for your assumptions or decisions.
-- Provide a detailed summary of your approach and results in either markdown or a jupyter notebook. Document your efforts even when they are not successful.
-- Do your best to keep your code and outputs organized.
-- Chemistry knowledge is not required. If you are unfamiliar, [`rdkit`](https://www.rdkit.org/docs/index.html) is a decent place to start.
-
-## Problem context
-
-Many diseases are caused by proteins in the body being too inactive or too active. As such, most drugs work by stopping or activating proteins. Here we will focus on stopping proteins (so-called inhibitors).
-
-The way proteins work is akin to a key opening a lock - a protein can be thought of as a large object with a small keyhole. The goal of a medicinal chemist is to find a molecule - a key - that can slot perfectly into the keyhole.
-
-However, biology doesn't like medicinal chemists. Many proteins share similar "keyholes". A key that switches off the desired protein could also switch off other similar proteins. Whilst shutting down the disease-causing protein is good, shutting down other essential proteins is bad. That's why drugs have side effects.
-
-In the drug discovery process, medicinal chemists will typically want to design molecules that are "selective" - i.e. it only interacts with the targeted protein and nothing else. This is challenging because it is hard to know, by eye, what are the molecular features that cause binding to one protein, but not other very similar proteins.
-
-That's where machine learning becomes useful!
-
-If we can build models that predict the ability of a molecule to stop different proteins, we can design molecules that can selectively stop the target protein but not others.
-
-In this problem, we will focus on the JAK (Janus-associated kinase) family of proteins. This family has 4 similar proteins: JAK1, JAK2, JAK3 and TYK2. The JAK family is strongly associated with diseases such as cancer and inflammation.
-
-There are already several approved JAK inhibitors to treat human diseases, including tofacitinib (an unselective JAK inhibitor from Pfizer) for rheumatoid arthritis, ruxolitinib (a selective JAK1/2 inhibitor from Incyte) for intermediate- or high-risk myeloproliferative neoplasms, baricitinib (a selective JAK1/2 inhibitor) for the treatment of rheumatoid arthritis, and peficitinib (an unselective JAK inhibitor) approved in Japan for treatment of rheumatoid arthritis. However, there is a strong hypothesis that the side-effects of these drugs are caused by hitting JAK2 as collateral damage. Designing selective JAK inhibitors has been a major focus in the pharma industry.
-
-For example, here’s a recent table from a paper from Pfizer summarizing medicinal chemists’ progress in finding selective inhibitors against JAK1 (full text of the paper available [here](https://www.osti.gov/biblio/1526050); don’t worry about reading it unless you are interested). IC50 is the concentration of compound required to shut down 50% of protein function. As such, a lower IC50 implies a more potent compound. This table shows that the chemists have found a compound that is 63x more potent against JAK1 than JAK2. That’s great, except it was a long process of trial-and-error. PostEra’s mission is to make drug discovery faster.
-
-![Pfizer table](pfizer_table.png)
-
-In this problem, you are given a dataset of measured activity against 4 related proteins: JAK1, JAK2, JAK3 and TYK2. There are two related types of measurements: pIC50 and pKi – in both cases, a higher number suggests stronger binding.
-
-## Data
-
-The Jupyter notebook will show you how to manipulate the data `kinase_JAK.csv`. Using `rdkit` is a good way to get started working with molecules.
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA_PATH, --data_path DATA_PATH
+                        path to data
+  -m MODEL, --model MODEL
+                        model to be used
+  -bs BATCH_SIZE, --batch_size BATCH_SIZE
+                        batch size
+  -nw NUM_WORKERS, --num_workers NUM_WORKERS
+                        dataloader workers
+  --model_path MODEL_PATH, -pth MODEL_PATH
+                        path to model file for load/save(*.pth)
+```
+# Future Direction & Ideas
+* Due to the degree of freedom and the complex latent requirements of the tasks, there are a large number of potential direction to further the effort: 
+    * General modelling
+        * Heterogeneneous graph formulation
+        * Hyperparameters refinement: balance oversmoothing and representation generation
+        * Graph layers crossover (GCN/GIN)
+        * Attention on aggregation 
+    * Data Representation
+        * Physical simulation as data generator: dynamics requirement
+          * RL
+        * Deeper understanding of domain thus relevant data for representation
+        * Functional Groups
+    * Training
+        * Use modularize frame (pytorch_lightning) to automate training configurations
+        * Increase diversity of metrics to troubleshoot performance
+        * Increase scale of training & parameter search / normalization methods
+        * Transfer learning from related dataset
+        * Multi-task training
+            * RL & intramolecular prediction
+    * Deployment
+        * Leverage high-abstraction framework to automate metrics logging/monitoring/training -> focus on key design components
+        * Rapidly increase versatility/configurability of the pipline & process
+        * Increase hierachy for code modularization
+        * DocString, Documentation
+        * Docker multi-stage build

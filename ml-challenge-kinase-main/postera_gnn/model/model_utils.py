@@ -1,7 +1,29 @@
 from torch_geometric.nn import MessagePassing
 
-from torch.nn import Linear, Parameter
-
+from torch import nn
+from torch.nn import Linear, Parameter, init
+from torch_geometric.nn import GCNConv, GINEConv, GINConv, GATConv
+from torch_geometric.utils import add_self_loops, degree
+#
+def init_weights_xavier(m, gain=1.414, 
+                        graph_layer_types=[GCNConv, GINEConv, GINConv]
+    ):
+    """
+    Initialize weight with current best scheme (xavier)
+    e.g.
+        net = nn.Sequential(nn.Linear(2, 2), nn.Linear(2, 2))
+        net.apply(init_weights)
+    """
+    def init_weights(m, gain=gain):
+        if isinstance(m, nn.Linear):
+            init.xavier_uniform_(m.weight, gain=1)
+            m.bias.data.fill_(0.01)
+    if isinstance(m, nn.Linear):
+        init_weights(m, gain=1)
+  
+    elif any(map(lambda l: isinstance(m, l), graph_layer_types)):
+        m.nn.apply(init_weights)
+        
 class GCNConv(MessagePassing):
     def __init__(self, in_channels, out_channels):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
@@ -35,7 +57,6 @@ class GCNConv(MessagePassing):
 
         # Step 6: Apply a final bias vector.
         out += self.bias
-
         return out
 
     def message(self, x_j, norm):

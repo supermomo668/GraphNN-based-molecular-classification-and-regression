@@ -2,10 +2,20 @@ import dgl.function as fn
 #
 import torch
 from torch import nn
-from torch_geometric.nn import GCNConv, TopKPooling, global_mean_pool, global_mean_pool as gap, global_max_pool as gmp
-from torch_geometric.utils import add_self_loops, degree
+import torch.nn.functional as F 
+from torch_geometric.nn import (
+    GCNConv, GINEConv, GINConv, TopKPooling, GATConv, GATv2Conv, JumpingKnowledge)
+from torch_geometric.nn import global_add_pool, global_mean_pool, global_max_pool
+#import pytorch_lightning as pl
+
 # custom model blocks 
-#from model_utils import *
+from .model_utils import init_weights_xavier   # *
+
+def get_model(dim_feats:int, out_dim:int, name:str="GIN"):
+    model = GIN
+    gnn_model = model(FeaturesArgs.n_node_features, 1)
+    gnn_model.apply(init_weights_xavier)
+    return gnn_model
 
 class SAGEConv(nn.Module):
     """Graph convolution module used by the GraphSAGE model.
@@ -40,7 +50,34 @@ class SAGEConv(nn.Module):
             h_total = torch.cat([h, h_N], dim=1)
             print(f"Feature shape:{h_total.shape}")
             return self.linear(h_total)
-          
+
+
+class GAT(torch.nn.Module):
+    def __init__(self, dim_feats:int, num_class:int, dim_h:int=32, 
+                 conv_dropout=0.6, lin_dropout=0.6, activation:str=None):
+        super(GAT, self).__init__()
+        self.in_head = 8
+        self.out_head = 1
+        self.lin_dropout = lin_dropout
+        self.conv_dropout = conv_dropout
+        self.activation = activation
+        #
+        self.conv1 = GATv2Conv(
+            dim_feats, self.dim_h, heads=self.in_head, dropout=0.6)
+        self.conv2 = GATv2Conv(
+            dim_h*self.in_head, num_class, concat=False,
+            heads=self.out_head, dropout=conv_dropout)
+
+    def forward(self, x , edge_index):
+        x = F.dropout(x, p=self.lin_dropout, training=self.training)
+        x = self.conv1(x, edge_index)
+        x = F.elu(x)
+        x = F.dropout(x, p=self.lin_dropout, training=self.training)
+        x = self.conv2(x, edge_index)
+        if self.activation == "classification":
+            return F.log_softmax(h, dim=1)
+        return F.leaky_relu(h)
+    
 class GCN(nn.Module):
     def __init__(self):
         # Init parent
@@ -77,38 +114,40 @@ class GCN(nn.Module):
         out = self.out(hidden)
         return out, hidden
 
-
-
 class GIN(nn.Module):
     """GIN"""
-    def __init__(self, dim_h):
+    def __init__(self, dim_feats:int, n_class:int, activation:str=None, 
+                 dim_h:int=32):
         super(GIN, self).__init__()
+        self.activation = activation
         self.conv1 = GINConv(
-            Sequential(Linear(dataset.num_node_features, dim_h),
-                       BatchNorm1d(dim_h), ReLU(),
-                       Linear(dim_h, dim_h), ReLU()))
+            nn.Sequential(nn.Linear(dim_feats, dim_h),
+                          nn.BatchNorm1d(dim_h), nn.LeakyReLU(),
+                          nn.Linear(dim_h, dim_h), nn.LeakyReLU()))
         self.conv2 = GINConv(
-            Sequential(Linear(dim_h, dim_h), 
-                       BatchNorm1d(dim_h), ReLU(),
-                       Linear(dim_h, dim_h), ReLU()))
+            nn.Sequential(nn.Linear(dim_h, dim_h),
+                          nn.BatchNorm1d(dim_h), nn.LeakyReLU(),
+                          nn.Linear(dim_h, dim_h), nn.LeakyReLU()))
         self.conv3 = GINConv(
-            Sequential(Linear(dim_h, dim_h), 
-                       BatchNorm1d(dim_h), ReLU(),
-                       Linear(dim_h, dim_h), ReLU()))
-        self.lin1 = Linear(dim_h*3, dim_h*3)
-        self.lin2 = Linear(dim_h*3, dataset.num_classes)
+            nn.Sequential(nn.Linear(dim_h, dim_h),
+                          nn.BatchNorm1d(dim_h), nn.LeakyReLU(),
+                          nn.Linear(dim_h, dim_h), nn.LeakyReLU()))
+        
+        self.lin1 = nn.Linear(dim_h*3, dim_h*3)
+        self.lin2 = nn.Linear(dim_h*3, n_class)
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, x_e, edge_index, batch):
+        # 
         # Node embeddings 
         h1 = self.conv1(x, edge_index)
         h2 = self.conv2(h1, edge_index)
         h3 = self.conv3(h2, edge_index)
 
         # Graph-level readout
-        h1 = global_add_pool(h1, batch)
-        h2 = global_add_pool(h2, batch)
-        h3 = global_add_pool(h3, batch)
-
+        h1 = global_add_pool(h1, batch)  # (*, 32)
+        h2 = global_add_pool(h2, batch)  # (*, 32)
+        h3 = global_add_pool(h3, batch)  # (*, 32)
+        
         # Concatenate graph embeddings
         h = torch.cat((h1, h2, h3), dim=1)
 
@@ -117,8 +156,9 @@ class GIN(nn.Module):
         h = h.relu()
         h = F.dropout(h, p=0.5, training=self.training)
         h = self.lin2(h)
-        
-        return h, F.log_softmax(h, dim=1)
+        if self.activation == "classification":
+            return F.log_softmax(h, dim=1)
+        return F.leaky_relu(h)
     
 class GNNStack(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, task='node'):
@@ -147,24 +187,26 @@ class GNNStack(nn.Module):
         if self.task == 'node':
             return pyg_nn.GCNConv(input_dim, hidden_dim)
         else:
-            return pyg_nn.GINConv(nn.Sequential(nn.Linear(input_dim, hidden_dim),
-                                  nn.ReLU(), nn.Linear(hidden_dim, hidden_dim)))
+            return pyg_nn.GINConv(
+                nn.Sequential(nn.Linear(input_dim, hidden_dim),    
+                              nn.ReLU(), 
+                              nn.Linear(hidden_dim, hidden_dim))
+            )
 
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-        if data.num_node_features == 0:
-            x = torch.ones(data.num_nodes, 1)
-
+    def forward(self, x, edge_index, batch):
+        # if data.num_node_features == 0:
+        #     x = torch.ones(data.num_nodes, 1)
         for i in range(self.num_layers):
             x = self.convs[i](x, edge_index)
             emb = x
             x = F.relu(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
+            x = F.dropout(x, p=self.dropout, 
+                          training=self.training)
             if not i == self.num_layers - 1:
                 x = self.lns[i](x)
 
         if self.task == 'graph':
-            x = pyg_nn.global_mean_pool(x, batch)
+            x = pyg_nn.global_add_pool(x, batch)
 
         x = self.post_mp(x)
 
@@ -173,5 +215,16 @@ class GNNStack(nn.Module):
     def loss(self, pred, label):
         return F.nll_loss(pred, label)
     
-    
+# Jumping knowledge model
+# model = nn.Sequential('x, edge_index, batch', [
+#             (nn.Dropout(p=0.5), 'x -> x'),
+#             (GCNConv(dim_feats, dim_h), 'x, edge_index -> x1'),
+#             ReLU(inplace=True),
+#             (GCNConv(dim_h, dim_h), 'x1, edge_index -> x2'),
+#             ReLU(inplace=True),
+#             (lambda x1, x2: [x1, x2], 'x1, x2 -> xs'),
+#             (JumpingKnowledge("cat", 64, num_layers=2), 'xs -> x'),
+#             (global_mean_pool, 'x, batch -> x'),
+#             Linear(2 * 64, num_class),
+#         ])
     
