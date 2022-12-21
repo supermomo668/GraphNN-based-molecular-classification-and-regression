@@ -1,0 +1,89 @@
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><h1 id="designing-selective-kinase-inhibitors">Designing selective kinase inhibitors</h1>
+<h3 id="postera">PostEra</h3>
+<h1 id="usage">Usage</h1>
+<h4 id="via-docker">via Docker</h4>
+<ul>
+<li>To run with docker and create running docker container, first run the following in working directory <code>postera_ml_challenge/</code>:<pre><code><span class="hljs-attribute">docker-compose build</span>
+</code></pre>or directly to running the container as well
+```
+docker compose up</li>
+<li>To use the application where the python entrypoint is already configured, you may run a basic training via the command:<pre><code>docker <span class="hljs-keyword">run</span><span class="bash"> -dit --name main -it --rm postera:latest <span class="hljs-_">-d</span> data/kinase_JAK_.8Train.csv train</span>
+</code></pre></li>
+<li>The application has the following mode of train/evaluate (single/cross) / infer, which you may make use of using <pre><code><span class="hljs-selector-tag">docker</span> <span class="hljs-selector-tag">run</span> <span class="hljs-selector-tag">-dit</span> <span class="hljs-selector-tag">--name</span> <span class="hljs-selector-tag">main</span> <span class="hljs-selector-tag">-it</span> <span class="hljs-selector-tag">--rm</span> <span class="hljs-selector-tag">postera</span><span class="hljs-selector-pseudo">:latest</span> <span class="hljs-selector-tag">-d</span> <span class="hljs-selector-attr">[path/to/input/data]</span> <span class="hljs-selector-attr">[train/evaluate/]</span>
+</code></pre>  or override the default entry point to run within the terminal:<pre><code>docker <span class="hljs-built_in">run</span> -<span class="hljs-keyword">it</span> <span class="hljs-comment">--user matt --name postera --entrypoint /bin/bash postera:latest</span>
+</code></pre></li>
+</ul>
+<p>To test the application with the container, we may run:</p>
+<pre><code>docker exec -<span class="hljs-keyword">it</span> postera /bin/bash
+</code></pre><p>To run application test for basic functionality test:</p>
+<pre><code><span class="hljs-symbol">docker</span> exec myubuntu <span class="hljs-keyword">bash </span>-c <span class="hljs-string">"pytest test.py"</span>
+</code></pre><h4 id="application-notes">Application Notes</h4>
+<ul>
+<li>The detail functions of the application can be viewed with:<pre><code><span class="hljs-attribute">python main -h</span>
+</code></pre>which will display the pipeline
+```
+usage: main.py [-h] -d DATA_PATH [-m MODEL] [-bs BATCH_SIZE] [-nw NUM_WORKERS]<pre><code>         [--model_path <span class="hljs-symbol">MODEL_PATH</span>]
+         {train,evaluate,infer} ...
+</code></pre></li>
+</ul>
+<p>positional arguments:
+  {train,evaluate,infer}
+                        train or test mode</p>
+<p>optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA_PATH, --data_path DATA_PATH
+                        path to data
+  -m MODEL, --model MODEL
+                        model to be used
+  -bs BATCH_SIZE, --batch_size BATCH_SIZE
+                        batch size
+  -nw NUM_WORKERS, --num_workers NUM_WORKERS
+                        dataloader workers
+  --model_path MODEL_PATH, -pth MODEL_PATH
+                        path to model file for load/save(*.pth)
+```</p>
+<h1 id="future-direction-ideas">Future Direction &amp; Ideas</h1>
+<ul>
+<li>Due to the degree of freedom and the complex latent requirements of the tasks, there are a large number of potential direction to further the effort: <ul>
+<li>General modelling<ul>
+<li>Heterogeneneous graph formulation</li>
+<li>Hyperparameters refinement: balance oversmoothing and representation generation</li>
+<li>Graph layers crossover (GCN/GIN)</li>
+<li>Attention on aggregation </li>
+</ul>
+</li>
+<li>Data Representation<ul>
+<li>Physical simulation as data generator: dynamics requirement<ul>
+<li>RL</li>
+</ul>
+</li>
+<li>Deeper understanding of domain thus relevant data for representation</li>
+<li>Functional Groups</li>
+</ul>
+</li>
+<li>Training<ul>
+<li>Use modularize frame (pytorch_lightning) to automate training configurations</li>
+<li>Increase diversity of metrics to troubleshoot performance</li>
+<li>Increase scale of training &amp; parameter search / normalization methods</li>
+<li>Transfer learning from related dataset</li>
+<li>Multi-task training<ul>
+<li>RL &amp; intramolecular prediction</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Deployment<ul>
+<li>Leverage high-abstraction framework to automate metrics logging/monitoring/training -&gt; focus on key design components</li>
+<li>Rapidly increase versatility/configurability of the pipline &amp; process</li>
+<li>Increase hierachy for code modularization</li>
+<li>DocString, Documentation</li>
+<li>Docker multi-stage build</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</body></html>

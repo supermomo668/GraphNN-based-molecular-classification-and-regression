@@ -10,6 +10,7 @@ docker-compose build
 or directly to running the container as well
 ```
 docker compose up
+```
 * To use the application where the python entrypoint is already configured, you may run a basic training via the command:
 ```
 docker run -dit --name main -it --rm postera:latest -d data/kinase_JAK_.8Train.csv train
@@ -32,11 +33,13 @@ To run application test for basic functionality test:
 docker exec myubuntu bash -c "pytest test.py"
 ```
 #### Application Notes
+
 * The detail functions of the application can be viewed with:
 ```
 python main -h
 ```
-which will display the pipeline
+which will display the pipeline arguments:
+
 ```
 usage: main.py [-h] -d DATA_PATH [-m MODEL] [-bs BATCH_SIZE] [-nw NUM_WORKERS]
                [--model_path MODEL_PATH]
