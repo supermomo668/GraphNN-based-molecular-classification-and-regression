@@ -6,6 +6,7 @@ ml-challenge-kinase-main/figure/
 ml-challenge-kinase-main/notebooks/
 *.bin
 *.sh
+*.bundle
 
 
 # Byte-compiled / optimized / DLL files
