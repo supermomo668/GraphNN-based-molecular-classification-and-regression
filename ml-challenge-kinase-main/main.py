@@ -85,7 +85,7 @@ if __name__=="__main__":
     # infer arguments
     infer_ap = subparsers.add_parser(name="infer")
     infer_ap.set_defaults(mode="infer")
-    infer_ap.add_argument("--input_json", '-i', required=True, 
+    infer_ap.add_argument("--input_json", '-i', required=True,
                           default=DataArgs.data_source.parent/'test_input.json',
                           help='input path to json file of SMILES') 
     infer_ap.add_argument("--pred_json", '-p', 

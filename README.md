@@ -1,18 +1,11 @@
 # Designing selective kinase inhibitors
 
-PostEra
-
-## Before coding:
-- **Please code this model yourself in the machine learning framework of your choice. Please don't clone an existing ML-for-chemistry model implementation, although feel free to utilize libraries such as [PyTorch Geometric](https://pytorch-geometric.readthedocs.io) or [Deep Graph Library](https://www.dgl.ai) as scaffolds for your implementation.**
-- **Please return any folder structure & files in a zip file, although please do not include large files such as model weights.**
-
 ## Problem Statement:
 
 The goal is to develop a model that can predict the pKi of a given compound against JAK1, JAK2, JAK3 and TYK2 kinases, which can then be used in identifying selective inhibitors. Selectivity in this scenario means a compound has a high pKi value for only one of the four kinases. For example, a selective compound would bind to JAK1 with a high pKi value, but with low pKi values to the other three kinases. See [problem context](#problem-context) for more detailed information.
 
-## What we're looking for
 
-### Must-Haves
+### Sections
 - **Exploratory Data Analysis**: Analyze the data `kinase_JAK.csv` and present to us your understanding of the data. Discuss any noteworthy aspects of the data and any assumptions you make.
 - **Data Processing**: Build a data processing pipeline and set up your model evaluation strategies based on this specific type of data. Carefully consider how you split the data and how that may impact your model evaluation.
 - **Model Development**: Implement an interesting deep learning model (e.g. transformer or graph neural net) that predicts pKi as a function of molecular structure for all four kinases. For text-based models, a tokenizer is provided in the notebook `kinase_challenge_data.ipynb`.
@@ -28,8 +21,6 @@ Based on your skills and interest, you could extend beyond the [must haves](#mus
 - **Extend any of the Must-Haves**: Go into more depth on any of the above sections.
 
 ### Additional Notes
-- We want you to think about interesting deep learning approaches to the problem, but we are not necessarily looking for a state-of-the-art deep model, so no need to spend time chasing small performance improvements.
-- We want to see that you've thought through the problem and made reasonable assumptions justified by the data, so explain your reasoning for your assumptions or decisions.
 - Provide a detailed summary of your approach and results in either markdown or a jupyter notebook. Document your efforts even when they are not successful.
 - Do your best to keep your code and outputs organized.
 - Chemistry knowledge is not required. If you are unfamiliar, [`rdkit`](https://www.rdkit.org/docs/index.html) is a decent place to start.

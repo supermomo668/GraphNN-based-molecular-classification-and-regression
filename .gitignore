@@ -1,9 +1,11 @@
 *.ipynb_checkpoints
 ml-challenge-kinase-main/tutorials/
 ml-challenge-kinase-main/data/processed/
+ml-challenge-kinase-main/data/*
 *AttentiveFP_Aromaticity_pre_trained.pth
 ml-challenge-kinase-main/figure/
 ml-challenge-kinase-main/notebooks/
+*.csv
 *.bin
 *.sh
 *.bundle
