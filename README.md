@@ -13,18 +13,6 @@ The goal is to develop a model that can predict the pKi of a given compound agai
 - **Model Deployment**: Discuss how your model could be deployed as a service.
 - **Future Ideas**: Consider which directions would be most interesting to pursue if you had more time and/or resources.
 
-### Other Ideas
-Based on your skills and interest, you could extend beyond the [must haves](#must-haves) in these potential areas:
-- **Advanced Modeling**: Test additional ideas to create an even better model.
-- **Model Comparison**: Test multiple ideas head-to-head.
-- **Example Deployment**: Build out a prototype deployment solution.
-- **Extend any of the Must-Haves**: Go into more depth on any of the above sections.
-
-### Additional Notes
-- Provide a detailed summary of your approach and results in either markdown or a jupyter notebook. Document your efforts even when they are not successful.
-- Do your best to keep your code and outputs organized.
-- Chemistry knowledge is not required. If you are unfamiliar, [`rdkit`](https://www.rdkit.org/docs/index.html) is a decent place to start.
-
 ## Problem context
 
 Many diseases are caused by proteins in the body being too inactive or too active. As such, most drugs work by stopping or activating proteins. Here we will focus on stopping proteins (so-called inhibitors).
